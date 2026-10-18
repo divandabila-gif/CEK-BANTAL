@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5b2a86">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Cek BANTAL</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: satu kolom besar ramah lansia, tab bawah tetap; warna lampu lalu lintas hanya untuk status & peringatan */
+:root{
+  --bg:#f5f3f7; --surface:#ffffff; --ink:#1e1a2b; --muted:#625b73; --line:#dcd6e4;
+  --accent:#5b2a86; --accent-soft:#ece3f5;
+  --green:#1f7a4d; --green-bg:#e3f4ea; --yellow:#8a5a00; --yellow-bg:#fdf1d6; --red:#b3261e; --red-bg:#fbe4e2;
+  --blue:#2457a6; --blue-bg:#e2ebf8;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16131d; --surface:#211c2b; --ink:#f1edf7; --muted:#b2a9c2; --line:#3a3348;
+  --accent:#c9a6ef; --accent-soft:#33264a;
+  --green:#7fd9a6; --green-bg:#173826; --yellow:#f3c763; --yellow-bg:#3b2f12; --red:#ff9b92; --red-bg:#47201d;
+  --blue:#9cbcf0; --blue-bg:#1c2a42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16131d; --surface:#211c2b; --ink:#f1edf7; --muted:#b2a9c2; --line:#3a3348;
+  --accent:#c9a6ef; --accent-soft:#33264a;
+  --green:#7fd9a6; --green-bg:#173826; --yellow:#f3c763; --yellow-bg:#3b2f12; --red:#ff9b92; --red-bg:#47201d;
+  --blue:#9cbcf0; --blue-bg:#1c2a42; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px)}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px}
+header{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h1{font-family:var(--display);font-weight:800;font-size:34px;line-height:1.05;margin:0;text-wrap:balance}
+h1 span{color:var(--accent)}
+h2{font-family:var(--display);font-weight:600;font-size:22px;margin:0;text-wrap:balance}
+p{margin:0}
+.muted{color:var(--muted);font-size:15px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.note{font-size:14px;color:var(--muted);background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+button{font:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:700;background:var(--accent);color:var(--surface);min-height:52px}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+.btn.small{min-height:40px;padding:8px 14px;font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* pusat peringatan */
+.alerts{margin-bottom:16px;display:flex;flex-direction:column;gap:8px}
+.alert{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 14px;border-left:8px solid;text-align:left;width:100%;border-top:0;border-right:0;border-bottom:0}
+.alert .ic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-family:var(--display);color:var(--surface)}
+.alert .tx{min-width:0;display:flex;flex-direction:column}
+.alert .tx b{font-size:16px}
+.alert .tx span{font-size:14px;color:var(--ink)}
+.alert.merah{background:var(--red-bg);border-color:var(--red);color:var(--red)} .alert.merah .ic{background:var(--red)}
+.alert.kuning{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)} .alert.kuning .ic{background:var(--yellow)}
+.alert.hijau{background:var(--green-bg);border-color:var(--green);color:var(--green)} .alert.hijau .ic{background:var(--green)}
+.alert.info{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)} .alert.info .ic{background:var(--blue)}
+.alert.merah .ic{animation:pulse 1.2s infinite}
+@keyframes pulse{50%{transform:scale(1.18)}}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+
+/* jadwal obat */
+.slot{display:flex;flex-direction:column;gap:8px}
+.slot-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.slot-head b{font-family:var(--display);font-size:20px}
+.slot.now .slot-head b{color:var(--accent)}
+.slot.late .slot-head b{color:var(--yellow)}
+.pill{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:2px 10px}
+.pill.now{background:var(--accent);color:var(--surface)}
+.pill.late{background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow)}
+.pill.ok{background:var(--green-bg);color:var(--green)}
+.med{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--line);border-radius:12px;background:var(--surface);text-align:left;width:100%;color:var(--ink)}
+.med .box{flex:none;width:34px;height:34px;border-radius:9px;border:2px solid var(--muted);display:grid;place-items:center}
+.med.done{border-color:var(--green);background:var(--green-bg)}
+.med.done .box{background:var(--green);border-color:var(--green)}
+.med.missed{border-color:var(--yellow)}
+.med .box svg{display:none;width:20px;height:20px;stroke:var(--surface)}
+.med.done .box svg{display:block}
+.med .txt{min-width:0;display:flex;flex-direction:column}
+.med .txt small{color:var(--muted);font-size:14px}
+.progress{height:12px;border-radius:99px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--green);border-radius:99px;transition:width .3s}
+
+/* kuesioner */
+.q{display:flex;gap:12px;align-items:flex-start}
+.letter{flex:none;width:46px;height:46px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-family:var(--display);font-weight:800;font-size:26px;display:grid;place-items:center}
+.q.danger .letter{background:var(--red-bg);color:var(--red);font-size:22px}
+.q .body{min-width:0;flex:1;display:flex;flex-direction:column;gap:8px}
+.q .body b{font-size:17px}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.yn button{min-height:48px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700}
+.yn button[aria-pressed="true"].ya{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+.q.danger .yn button[aria-pressed="true"].ya{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.yn button[aria-pressed="true"].tidak{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.result{border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:8px;border:2px solid}
+.result.hijau{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.result.kuning{background:var(--yellow-bg);border-color:var(--yellow);color:var(--yellow)}
+.result.merah{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.result h2{color:inherit}
+.result p{color:var(--ink)}
+.lamp{display:flex;gap:6px}
+.lamp i{width:18px;height:18px;border-radius:50%;background:var(--line)}
+.result.hijau .lamp i:nth-child(3),.result.kuning .lamp i:nth-child(2),.result.merah .lamp i:nth-child(1){background:currentColor}
+
+/* riwayat */
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dot{width:30px;height:30px;border-radius:50%;border:2px dashed var(--line)}
+.dot.hijau{background:var(--green);border:0}.dot.kuning{background:var(--yellow);border:0}.dot.merah{background:var(--red);border:0}
+table{width:100%;border-collapse:collapse;font-size:15px;font-variant-numeric:tabular-nums}
+td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+.tag{font-weight:700;border-radius:6px;padding:1px 8px;font-size:13px}
+.tag.hijau{background:var(--green-bg);color:var(--green)}.tag.kuning{background:var(--yellow-bg);color:var(--yellow)}.tag.merah{background:var(--red-bg);color:var(--red)}
+
+/* form */
+label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:15px}
+input,select{font:inherit;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.del{background:none;border:0;color:var(--red);font-weight:700;font-size:15px;padding:6px}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700}
+.switch button{flex:none;width:64px;height:36px;border-radius:99px;border:0;background:var(--line);position:relative}
+.switch button::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;background:var(--surface);transition:left .2s}
+.switch button[aria-pressed="true"]{background:var(--green)}
+.switch button[aria-pressed="true"]::after{left:32px}
+
+/* layar alarm */
+.overlay{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:center;gap:18px;
+  padding-top:max(24px,env(safe-area-inset-top,0px));padding-bottom:max(24px,env(safe-area-inset-bottom,0px));
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));color:#fff}
+.overlay.obat{background:#4a1f72}
+.overlay.bahaya{background:#9e1c15}
+.overlay .ring{width:96px;height:96px;border-radius:50%;border:6px solid rgba(255,255,255,.9);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:46px;animation:ring 1s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(255,255,255,.6)}100%{box-shadow:0 0 0 28px rgba(255,255,255,0)}}
+.overlay h2{font-size:32px;color:#fff;line-height:1.1}
+.overlay p{font-size:19px;color:#fff}
+.overlay ul{margin:0;padding-left:22px;font-size:20px}
+.overlay .btn{background:#fff;color:#1e1a2b}
+.overlay .btn.ghost{background:transparent;color:#fff;border-color:#fff}
+.overlay .sos{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:.04em;user-select:all}
+
+/* tab bawah */
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav button{background:none;border:0;color:var(--muted);padding:10px 2px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;font-weight:700;position:relative}
+nav button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-current="page"]{color:var(--accent)}
+nav .badge{position:absolute;top:6px;left:calc(50% + 8px);width:14px;height:14px;border-radius:50%;border:2px solid var(--surface)}
+nav .badge.merah{background:var(--red)}nav .badge.kuning{background:var(--yellow)}nav .badge.info{background:var(--blue)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow" id="today"></span>
+    <h1>Cek <span>BANTAL</span></h1>
+    <p class="muted" id="greet">Pendamping harian pasien jantung hipertensi</p>
+  </header>
+  <section class="alerts" id="alerts" aria-live="polite"></section>
+  <main id="view"></main>
+</div>
+<div id="overlay" hidden></div>
+
+<nav aria-label="Menu utama"><div class="in">
+  <button data-tab="obat"><svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="7" rx="3.5"/><path d="M12 9v7"/></svg>Obat<i class="badge" id="b-obat" hidden></i></button>
+  <button data-tab="cek"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.7-7 10-7 10z"/></svg>Cek BANTAL<i class="badge" id="b-cek" hidden></i></button>
+  <button data-tab="riwayat"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Riwayat</button>
+  <button data-tab="atur"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>Alarm & Atur<i class="badge" id="b-atur" hidden></i></button>
+</div></nav>
+
+<script>
+/* Mode jalan: NATIVE = di dalam APK Android; PWA = dibuka dari situs https sendiri */
+const NATIVE=typeof window.AndroidApp!=="undefined";
+const PWA=!NATIVE&&location.protocol==="https:"&&window.top===window.self&&"serviceWorker" in navigator;
+let swReg=null;
+if(PWA){navigator.serviceWorker.register("sw.js").then(r=>swReg=r).catch(()=>{})}
+const SLOTS=[
+  {id:"subuh",nama:"Setelah Subuh",def:"04:30"},
+  {id:"dzuhur",nama:"Setelah Dzuhur",def:"11:45"},
+  {id:"ashar",nama:"Setelah Ashar",def:"15:05"},
+  {id:"maghrib",nama:"Setelah Maghrib",def:"17:45"},
+  {id:"isya",nama:"Setelah Isya",def:"19:00"}
+];
+const QS=[
+  {k:"B",t:"Bantal",q:"Butuh bantal lebih banyak atau lebih tinggi agar bisa tidur tanpa sesak?"},
+  {k:"A",t:"Air kencing",q:"Kencing jauh lebih sedikit dari biasanya?"},
+  {k:"N",t:"Napas",q:"Sesak saat bicara, makan, atau berjalan ke kamar mandi?"},
+  {k:"T",t:"Tungkai",q:"Kaki bengkak, atau bekas karet kaus kaki / tali sandal membekas dalam?"},
+  {k:"A",t:"Aktivitas",q:"Tidak kuat melakukan kegiatan yang biasanya bisa dilakukan?"},
+  {k:"L",t:"Lingkar",q:"Cincin, sabuk, atau pinggang celana terasa lebih sesak?"}
+];
+const DANGER=[
+  {q:"Sesak walaupun sedang duduk diam atau istirahat?"},
+  {q:"Terbangun malam karena sesak, atau harus tidur sambil duduk?"},
+  {q:"Nyeri dada, berdebar sangat kencang, atau hampir pingsan?"}
+];
+const DEFAULT={nama:"",alarm:true,cekJam:"07:00",jam:{},meds:[
+  {id:"m1",nama:"Furosemid",dosis:"40 mg, 1 tablet",slot:"subuh",contoh:true},
+  {id:"m2",nama:"Bisoprolol",dosis:"2,5 mg, 1 tablet",slot:"subuh",contoh:true},
+  {id:"m3",nama:"Ramipril",dosis:"5 mg, 1 tablet",slot:"maghrib",contoh:true},
+  {id:"m4",nama:"Spironolakton",dosis:"25 mg, 1 tablet",slot:"dzuhur",contoh:true}
+],taken:{},checks:{}};
+
+let S;
+try{S=JSON.parse(localStorage.getItem("cekbantal"))||null}catch(e){S=null}
+if(!S)S=structuredClone(DEFAULT);
+S.jam=S.jam||{};if(S.alarm===undefined)S.alarm=true;S.cekJam=S.cekJam||"07:00";
+function save(){try{localStorage.setItem("cekbantal",JSON.stringify(S))}catch(e){}syncNative()}
+/* Kirim jadwal ke Android agar alarm tetap bunyi walau aplikasi ditutup / HP terkunci */
+function syncNative(){
+  if(!NATIVE)return;const T=todayKey();const items=[];
+  SLOTS.forEach(s=>{const ms=slotMeds(s.id);if(!ms.length)return;
+    items.push({id:s.id,time:jamOf(s.id),title:"Waktunya minum obat "+s.nama.toLowerCase(),text:ms.map(m=>m.nama+" ("+m.dosis+")").join(", "),done:untaken(s.id).length?"":T})});
+  items.push({id:"cek",time:S.cekJam,title:"Waktunya Cek BANTAL",text:"Jawab 9 pertanyaan singkat tentang sesak, bengkak, dan kencing hari ini.",done:S.checks[T]?T:""});
+  try{window.AndroidApp.setSchedule(JSON.stringify({alarm:!!S.alarm,items}))}catch(e){}
+}
+
+const key=d=>{const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+const todayKey=()=>key(new Date());
+const fmtDay=d=>new Date(d).toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long"});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const check='<svg viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+const jamOf=id=>S.jam[id]||SLOTS.find(s=>s.id===id).def;
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m};
+const nowMin=()=>{const n=new Date();return n.getHours()*60+n.getMinutes()};
+const LATE=60; /* menit setelah jadwal dianggap terlewat */
+
+let tab="obat"; let draft={a:{},d:{}};
+
+function slotMeds(id){return S.meds.filter(m=>m.slot===id)}
+function untaken(id,day=todayKey()){const t=S.taken[day]||{};return slotMeds(id).filter(m=>!t[m.id])}
+function slotState(id){
+  const ms=slotMeds(id);if(!ms.length)return null;
+  if(!untaken(id).length)return "ok";
+  const d=nowMin()-toMin(jamOf(id));
+  if(d>=LATE)return "late"; if(d>=-30)return "now"; return "later";
+}
+function adherence(day){const t=S.taken[day]||{};const tot=S.meds.length;if(!tot)return null;return Math.round(S.meds.filter(m=>t[m.id]).length/tot*100)}
+function level(a,d){
+  if(Object.values(d).some(v=>v))return "merah";
+  const n=Object.values(a).filter(v=>v).length;
+  return n===0?"hijau":n<=2?"kuning":"merah";
+}
+const ADVICE={
+  hijau:{judul:"Hijau: aman hari ini",isi:"Lanjutkan minum obat sesuai jadwal, kurangi garam, dan cek lagi besok pagi."},
+  kuning:{judul:"Kuning: waspada",isi:"Ada tanda penumpukan cairan. Datang kontrol ke puskesmas dalam 1–2 hari. Jangan berhenti minum obat, dan kurangi garam serta minum sesuai anjuran dokter."},
+  merah:{judul:"Merah: segera ke IGD",isi:"Ada tanda bahaya gagal jantung memburuk. Segera ke IGD rumah sakit terdekat hari ini, bawa semua obat dan buku catatan ini. Hubungi kader atau keluarga untuk mengantar."}
+};
+
+/* ---------- pusat peringatan ---------- */
+function computeAlerts(){
+  const A=[];const T=todayKey();const c=S.checks[T];
+  const prev=n=>{const d=new Date();d.setDate(d.getDate()-n);return S.checks[key(d)]};
+  if(c&&c.level==="merah")A.push({lv:"merah",ic:"!",tab:"cek",judul:"Tanda bahaya terdeteksi",isi:"Segera ke IGD hari ini. Ambulans gawat darurat: 119."});
+  else if(c&&c.level==="kuning"&&prev(1)?.level==="kuning"&&prev(2)?.level==="kuning")
+    A.push({lv:"merah",ic:"!",tab:"cek",judul:"Kuning 3 hari berturut-turut",isi:"Kondisi belum membaik. Periksa ke puskesmas atau IGD hari ini."});
+  else if(c&&c.level==="kuning")A.push({lv:"kuning",ic:"!",tab:"cek",judul:"Waspada: ada tanda penumpukan cairan",isi:"Kontrol ke puskesmas dalam 1–2 hari."});
+  SLOTS.forEach(s=>{if(slotState(s.id)==="late")A.push({lv:"kuning",ic:"⏰",tab:"obat",judul:`Obat ${s.nama.toLowerCase()} belum diminum`,isi:untaken(s.id).map(m=>m.nama).join(", ")+". Minum sekarang bila belum lewat jadwal berikutnya, jangan menggandakan dosis."})});
+  if(!c&&nowMin()>=toMin(S.cekJam))A.push({lv:"info",ic:"?",tab:"cek",judul:"Belum Cek BANTAL hari ini",isi:"Isi 9 pertanyaan singkat, kurang dari 2 menit."});
+  const y=new Date();y.setDate(y.getDate()-1);const ay=adherence(key(y));
+  if(ay!==null&&ay<100&&S.taken[key(y)])A.push({lv:"info",ic:"i",tab:"riwayat",judul:`Kemarin obat diminum ${ay}%`,isi:"Ada obat yang terlewat kemarin. Lihat riwayat."});
+  if(!A.length)A.push({lv:"hijau",ic:"✓",tab:"riwayat",judul:"Semua aman",isi:c?"Cek BANTAL hijau dan obat sesuai jadwal sejauh ini.":"Obat sesuai jadwal sejauh ini."});
+  const order={merah:0,kuning:1,info:2,hijau:3};
+  return A.sort((a,b)=>order[a.lv]-order[b.lv]);
+}
+function renderAlerts(){
+  const A=computeAlerts();
+  let h=A.map(a=>`<button class="alert ${a.lv}" data-go="${a.tab}"><span class="ic" aria-hidden="true">${a.ic}</span><span class="tx"><b>${a.judul}</b><span>${a.isi}</span></span></button>`).join("");
+  if(!S.alarm)h+=`<button class="alert info" data-go="atur"><span class="ic">i</span><span class="tx"><b>Alarm mati</b><span>Nyalakan di menu Alarm & Atur.</span></span></button>`;
+  else if(!audioReady&&!NATIVE)h+=`<button class="alert info" id="unlock"><span class="ic">♪</span><span class="tx"><b>Ketuk di sini untuk menyalakan suara alarm</b><span>HP mewajibkan satu ketukan setiap kali aplikasi dibuka.</span></span></button>`;
+  document.getElementById("alerts").innerHTML=h;
+  const worst=(f)=>{const x=A.filter(f);return x.length?x[0].lv:null};
+  setBadge("b-obat",worst(a=>a.tab==="obat"));
+  setBadge("b-cek",worst(a=>a.tab==="cek"));
+  setBadge("b-atur",S.alarm&&(audioReady||NATIVE)?null:"info");
+}
+function setBadge(id,lv){const b=document.getElementById(id);if(!lv||lv==="hijau"){b.hidden=true;return}b.hidden=false;b.className="badge "+lv}
+
+/* ---------- views ---------- */
+function viewObat(){
+  const T=todayKey();const t=S.taken[T]||{};const pct=adherence(T)??0;
+  const done=S.meds.filter(m=>t[m.id]).length;
+  let h=`<div class="stack"><div class="panel"><div class="slot-head"><b style="font-family:var(--display);font-size:20px">Obat hari ini</b><span class="muted">${done} dari ${S.meds.length} diminum</span></div><div class="progress"><i style="width:${pct}%"></i></div><p class="muted">Alarm berbunyi pada jam di samping. Ketuk nama obat setelah diminum.</p></div>`;
+  SLOTS.forEach(s=>{
+    const ms=slotMeds(s.id);if(!ms.length)return;const st=slotState(s.id);
+    const pill=st==="now"?'<span class="pill now">Sekarang</span>':st==="late"?'<span class="pill late">Terlewat</span>':st==="ok"?'<span class="pill ok">Selesai</span>':'';
+    h+=`<section class="slot ${st}"><div class="slot-head"><b>${s.nama}</b><span class="row" style="gap:8px">${pill}<span class="muted">⏰ ${jamOf(s.id).replace(":",".")}</span></span></div>`;
+    ms.forEach(m=>{h+=`<button class="med ${t[m.id]?"done":st==="late"?"missed":""}" data-med="${m.id}" aria-pressed="${!!t[m.id]}"><span class="box">${check}</span><span class="txt"><b>${esc(m.nama)}</b><small>${esc(m.dosis)}${m.contoh?" · contoh":""}</small></span></button>`});
+    h+=`</section>`;
+  });
+  if(!S.meds.length)h+=`<div class="panel"><p>Belum ada obat. Tambahkan lewat menu <b>Alarm & Atur</b>.</p></div>`;
+  if(S.meds.some(m=>m.contoh))h+=`<p class="note">Daftar obat di atas hanya contoh. Ganti sesuai resep dokter lewat menu <b>Alarm & Atur</b>.</p>`;
+  if(S.meds.some(m=>/furosemid|diuretik|spironolakton|hct/i.test(m.nama)&&["maghrib","isya"].includes(m.slot)))h+=`<p class="note">Obat pelancar kencing sebaiknya diminum pagi agar tidur malam tidak terganggu. Tanyakan ke dokter.</p>`;
+  return h+`</div>`;
+}
+function qBlock(item,i,group,isDanger){
+  const v=draft[group][i];
+  return `<div class="q ${isDanger?"danger":""}"><span class="letter" aria-hidden="true">${isDanger?"!":item.k}</span><div class="body">${isDanger?"":`<span class="eyebrow">${item.t}</span>`}<b>${item.q}</b><div class="yn"><button class="ya" data-g="${group}" data-i="${i}" data-v="1" aria-pressed="${v===true}">Ya</button><button class="tidak" data-g="${group}" data-i="${i}" data-v="0" aria-pressed="${v===false}">Tidak</button></div></div></div>`;
+}
+function viewCek(){
+  const sudah=S.checks[todayKey()];
+  if(sudah)return `<div class="stack">${resultBox(sudah.level)}<button class="btn ghost" id="ulang">Isi ulang cek hari ini</button></div>`;
+  let h=`<div class="stack"><p class="muted">Isi setiap pagi setelah bangun tidur. Bandingkan dengan keadaan Anda biasanya.</p><div class="panel">`;
+  QS.forEach((q,i)=>h+=qBlock(q,i,"a",false));
+  h+=`</div><div class="panel"><h2 style="color:var(--red)">Tanda bahaya</h2>`;
+  DANGER.forEach((q,i)=>h+=qBlock(q,i,"d",true));
+  const lengkap=QS.every((_,i)=>draft.a[i]!==undefined)&&DANGER.every((_,i)=>draft.d[i]!==undefined);
+  h+=`</div><div class="legend"><span><i style="background:var(--green)"></i>Hijau: aman</span><span><i style="background:var(--yellow)"></i>Kuning: 1–2 tanda, kontrol 1–2 hari</span><span><i style="background:var(--red)"></i>Merah: ≥3 tanda atau tanda bahaya, ke IGD</span></div>
+  <button class="btn" id="simpan" ${lengkap?"":"disabled style='opacity:.45'"}>Lihat hasil</button>${lengkap?"":'<p class="muted" style="text-align:center">Jawab semua pertanyaan dulu.</p>'}</div>`;
+  return h;
+}
+function resultBox(lv){
+  const a=ADVICE[lv];const yes=(S.checks[todayKey()]?.yes||[]);
+  return `<div class="result ${lv}"><div class="lamp" aria-hidden="true"><i></i><i></i><i></i></div><h2>${a.judul}</h2><p>${a.isi}</p>${yes.length?`<p class="muted">Tanda yang muncul: ${yes.join(", ")}</p>`:""}${lv==="merah"?`<p><b>Ambulans gawat darurat: 119</b></p>`:""}</div>
+  <button class="btn" id="share">Salin ringkasan untuk WhatsApp kader</button><p class="muted" id="sharemsg" role="status"></p>`;
+}
+function viewRiwayat(){
+  let dots="",rows="";
+  for(let i=13;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);const k=key(d);const c=S.checks[k];
+    dots+=`<div class="day"><span class="dot ${c?c.level:""}" title="${c?c.level:"belum dicek"}"></span>${d.getDate()}/${d.getMonth()+1}</div>`;
+    if(i<7){const ad=adherence(k);const adc=ad===null?"":ad===100?"hijau":ad>=75?"kuning":"merah";
+      rows=`<tr><td>${d.toLocaleDateString("id-ID",{weekday:"short",day:"numeric",month:"short"})}</td><td>${c?`<span class="tag ${c.level}">${c.level[0].toUpperCase()+c.level.slice(1)}</span>`:"–"}</td><td>${ad===null?"–":`<span class="tag ${adc}">${ad}%</span>`}</td></tr>`+rows}
+  }
+  const cnt={hijau:0,kuning:0,merah:0};
+  Object.keys(S.checks).forEach(k=>{if((new Date()-new Date(k))/864e5<14)cnt[S.checks[k].level]++});
+  return `<div class="stack"><div class="panel"><h2>14 hari terakhir</h2><div class="days">${dots}</div><p class="muted">Hijau ${cnt.hijau} · Kuning ${cnt.kuning} · Merah ${cnt.merah} · Lingkaran putus-putus berarti belum dicek.</p></div>
+  <div class="panel"><h2>7 hari terakhir</h2><div style="overflow-x:auto"><table><thead><tr><th>Hari</th><th>Cek BANTAL</th><th>Obat diminum</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="muted">Warna kepatuhan obat: hijau 100%, kuning 75–99%, merah di bawah 75%.</p></div>
+  <p class="note">Tunjukkan halaman ini kepada petugas saat kontrol Prolanis.</p></div>`;
+}
+function viewAtur(){
+  let h=`<div class="stack"><div class="panel"><h2>Alarm</h2>
+  <div class="switch"><span>Alarm minum obat</span><button id="tgl-alarm" aria-pressed="${S.alarm}" aria-label="Alarm minum obat"></button></div>
+  <div class="times">${SLOTS.map(s=>`<label for="j-${s.id}">${s.nama}<input type="time" id="j-${s.id}" data-jam="${s.id}" value="${jamOf(s.id)}"></label>`).join("")}
+  <label for="j-cek">Pengingat Cek BANTAL<input type="time" id="j-cek" value="${S.cekJam}"></label></div>
+  <div class="row"><button class="btn small" id="tes-obat">Tes alarm obat</button><button class="btn small ghost" id="tes-bahaya">Tes alarm bahaya</button></div>
+  ${NATIVE?`<p class="note">Alarm tetap berbunyi walaupun aplikasi ditutup atau HP terkunci. Bila alarm tidak muncul, buka Pengaturan HP → Aplikasi → Cek BANTAL, izinkan Notifikasi dan Mulai otomatis, lalu matikan Penghematan baterai untuk aplikasi ini.</p>`
+  :PWA?`<button class="btn small ghost" id="izin-notif">Izinkan notifikasi</button><p class="note">Alarm berbunyi selama aplikasi terbuka atau baru saja diminimalkan. Untuk alarm yang pasti bunyi saat HP terkunci, gunakan versi APK Android, atau pasang juga alarm HP biasa sebagai cadangan.</p>`
+  :`<p class="note">Alarm berbunyi selama aplikasi ini terbuka. Biarkan aplikasi terbuka di HP dengan layar menyala, atau pasang juga alarm HP biasa di jam yang sama sebagai cadangan.</p>`}</div>
+  <div class="panel"><label for="nama">Nama pasien<input id="nama" value="${esc(S.nama)}" placeholder="mis. Bu Sutini"></label></div>
+  <div class="panel"><h2>Daftar obat</h2>`;
+  S.meds.forEach(m=>{h+=`<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:8px"><div style="min-width:0"><b>${esc(m.nama)}</b><br><span class="muted">${esc(m.dosis)} · ${SLOTS.find(s=>s.id===m.slot).nama}</span></div><button class="del" data-del="${m.id}">Hapus</button></div>`});
+  h+=`<label for="mn">Nama obat<input id="mn" placeholder="mis. Amlodipin"></label><label for="md">Dosis<input id="md" placeholder="mis. 10 mg, 1 tablet"></label><label for="ms">Waktu minum<select id="ms">${SLOTS.map(s=>`<option value="${s.id}">${s.nama}</option>`).join("")}</select></label><button class="btn" id="add">Tambah obat</button></div>
+  <p class="note">Data tersimpan hanya di HP ini. Isi jadwal sesuai resep dokter, jangan mengubah dosis sendiri.</p>
+  <button class="btn ghost" id="reset">Kosongkan semua data</button><div id="confirm"></div></div>`;
+  return h;
+}
+
+/* ---------- suara & alarm ---------- */
+let audioCtx=null,audioReady=false,beepTimer=null,wakeLock=null;
+const fired={};let snooze={};
+function unlockAudio(){
+  try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();audioReady=true}catch(e){audioReady=false}
+  requestWake();renderAlerts();
+}
+async function requestWake(){try{if(navigator.wakeLock&&!wakeLock){wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>wakeLock=null)}}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&audioReady)requestWake()});
+function beep(freq,dur,at){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="square";o.frequency.value=freq;o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(0.0001,at);g.gain.exponentialRampToValueAtTime(0.25,at+0.02);g.gain.exponentialRampToValueAtTime(0.0001,at+dur);o.start(at);o.stop(at+dur+0.05)}
+function startSound(kind){
+  stopSound();let n=0;
+  const play=()=>{
+    if(audioReady&&audioCtx){const t=audioCtx.currentTime;
+      if(kind==="bahaya"){for(let i=0;i<4;i++){beep(980,0.18,t+i*0.25);beep(740,0.18,t+i*0.25+0.12)}}
+      else{beep(660,0.22,t);beep(880,0.22,t+0.3);beep(1040,0.35,t+0.6)}}
+    try{navigator.vibrate&&navigator.vibrate(kind==="bahaya"?[400,150,400,150,400]:[300,200,300])}catch(e){}
+    if(++n>=(kind==="bahaya"?40:30))stopSound();
+  };
+  play();beepTimer=setInterval(play,kind==="bahaya"?1500:2000);
+}
+function stopSound(){clearInterval(beepTimer);beepTimer=null;try{navigator.vibrate&&navigator.vibrate(0)}catch(e){}}
+
+function showOverlay(kind,slotId){
+  const ov=document.getElementById("overlay");
+  if(kind==="obat"){
+    const s=SLOTS.find(x=>x.id===slotId);const ms=slotId?untaken(slotId):S.meds.slice(0,2);
+    ov.className="overlay obat";
+    ov.innerHTML=`<div class="ring" aria-hidden="true">⏰</div><span class="eyebrow" style="color:#fff">${s?s.nama+" · "+jamOf(s.id).replace(":","."):"Tes alarm"}</span><h2>Waktunya minum obat</h2><ul>${ms.map(m=>`<li><b>${esc(m.nama)}</b> — ${esc(m.dosis)}</li>`).join("")}</ul>
+    <button class="btn" id="ov-done" data-slot="${slotId||""}">Sudah saya minum</button><button class="btn ghost" id="ov-snooze" data-slot="${slotId||""}">Ingatkan 10 menit lagi</button>`;
+  }else{
+    ov.className="overlay bahaya";
+    ov.innerHTML=`<div class="ring" aria-hidden="true">!</div><span class="eyebrow" style="color:#fff">Tanda bahaya</span><h2>Segera ke IGD rumah sakit</h2><p>Gejala menunjukkan gagal jantung bisa memburuk. Jangan menunggu jadwal kontrol. Minta keluarga atau kader mengantar, bawa semua obat.</p><p>Ambulans gawat darurat</p><span class="sos">119</span>
+    <button class="btn" id="ov-ok">Saya mengerti</button>`;
+  }
+  ov.hidden=false;ov.setAttribute("role","alertdialog");ov.querySelector("button").focus();startSound(kind);
+  if(PWA&&swReg&&document.visibilityState!=="visible"&&typeof Notification!=="undefined"&&Notification.permission==="granted"){
+    try{swReg.showNotification(kind==="obat"?"Waktunya minum obat":"Tanda bahaya: segera ke IGD",{body:kind==="obat"?(slotId?untaken(slotId).map(m=>m.nama).join(", "):"Tes alarm"):"Ambulans gawat darurat: 119",icon:"icon-192.png",badge:"icon-192.png",vibrate:[300,200,300],requireInteraction:true,tag:"cekbantal-"+kind})}catch(e){}
+  }
+}
+function closeOverlay(){document.getElementById("overlay").hidden=true;stopSound();if(NATIVE){try{window.AndroidApp.cancelNotifications()}catch(e){}}}
+/* Dipanggil Android saat pasien membuka notifikasi alarm */
+window.onNativeAlarm=function(id){
+  unlockAudio();
+  if(id==="cek"){go("cek");return}
+  if(SLOTS.some(s=>s.id===id)&&untaken(id).length){fired[todayKey()+id]=true;go("obat");showOverlay("obat",id)}else{go("obat")}
+};
+document.getElementById("overlay").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const T=todayKey();
+  if(b.id==="ov-done"&&b.dataset.slot){S.taken[T]=S.taken[T]||{};slotMeds(b.dataset.slot).forEach(m=>S.taken[T][m.id]=true);save()}
+  if(b.id==="ov-snooze"&&b.dataset.slot){snooze[b.dataset.slot]=Date.now()+10*60000;fired[T+b.dataset.slot]=false}
+  closeOverlay();render();
+});
+
+function tick(){
+  renderAlerts();
+  if(!S.alarm||!document.getElementById("overlay").hidden)return;
+  const T=todayKey();const now=nowMin();
+  for(const s of SLOTS){
+    if(!untaken(s.id).length)continue;
+    const d=now-toMin(jamOf(s.id));const k=T+s.id;
+    const snoozed=snooze[s.id]&&Date.now()<snooze[s.id];
+    const snoozeDue=snooze[s.id]&&Date.now()>=snooze[s.id];
+    if((d>=0&&d<LATE&&!fired[k]&&!snoozed)||snoozeDue){fired[k]=true;delete snooze[s.id];showOverlay("obat",s.id);return}
+  }
+}
+
+/* ---------- render & events ---------- */
+function render(){
+  document.getElementById("today").textContent=fmtDay(new Date());
+  document.getElementById("greet").textContent=S.nama?`Halo, ${S.nama}`:"Pendamping harian pasien jantung hipertensi";
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.tab===tab?"page":"false"));
+  document.getElementById("view").innerHTML={obat:viewObat,cek:viewCek,riwayat:viewRiwayat,atur:viewAtur}[tab]();
+  renderAlerts();
+}
+function go(t){tab=t;render();scrollTo(0,0)}
+document.addEventListener("click",()=>{if(!audioReady)unlockAudio()},{capture:true});
+document.querySelector("nav").addEventListener("click",e=>{const b=e.target.closest("button");if(b)go(b.dataset.tab)});
+document.getElementById("alerts").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.id==="unlock"){unlockAudio();return}go(b.dataset.go)});
+document.getElementById("view").addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;const T=todayKey();
+  if(t.dataset.med){S.taken[T]=S.taken[T]||{};S.taken[T][t.dataset.med]=!S.taken[T][t.dataset.med];save();render();return}
+  if(t.dataset.g){draft[t.dataset.g][t.dataset.i]=t.dataset.v==="1";render();return}
+  if(t.id==="simpan"){
+    const lv=level(draft.a,draft.d);
+    const yes=QS.filter((_,i)=>draft.a[i]).map(q=>q.t.toLowerCase()).concat(DANGER.filter((_,i)=>draft.d[i]).map(()=>"tanda bahaya"));
+    S.checks[T]={level:lv,yes:[...new Set(yes)]};save();draft={a:{},d:{}};render();
+    if(lv==="merah")showOverlay("bahaya");
+    return}
+  if(t.id==="ulang"){delete S.checks[T];save();render();return}
+  if(t.id==="share"){
+    const c=S.checks[T];const ad=adherence(T);
+    const txt=`Cek BANTAL ${fmtDay(new Date())}\nNama: ${S.nama||"-"}\nHasil: ${c.level.toUpperCase()}\nTanda: ${c.yes.length?c.yes.join(", "):"tidak ada"}\nObat diminum hari ini: ${ad??0}%`;
+    const msg=document.getElementById("sharemsg");
+    navigator.clipboard.writeText(txt).then(()=>msg.textContent="Tersalin. Tempel di grup WhatsApp Prolanis.").catch(()=>{msg.innerHTML=`<textarea style="width:100%;font:inherit" rows="5" readonly>${esc(txt)}</textarea>`;msg.querySelector("textarea").select()});
+    return}
+  if(t.id==="tgl-alarm"){S.alarm=!S.alarm;save();render();return}
+  if(t.id==="tes-obat"){showOverlay("obat",null);return}
+  if(t.id==="tes-bahaya"){showOverlay("bahaya");return}
+  if(t.id==="izin-notif"){try{Notification.requestPermission().then(p=>{t.textContent=p==="granted"?"Notifikasi diizinkan":"Notifikasi ditolak, ubah di pengaturan browser";t.disabled=true})}catch(e){t.textContent="HP ini tidak mendukung notifikasi web";t.disabled=true}return}
+  if(t.id==="add"){const n=document.getElementById("mn").value.trim();if(!n)return;S.meds.push({id:"m"+Date.now(),nama:n,dosis:document.getElementById("md").value.trim()||"-",slot:document.getElementById("ms").value});save();render();return}
+  if(t.dataset.del){S.meds=S.meds.filter(m=>m.id!==t.dataset.del);save();render();return}
+  if(t.id==="reset"){document.getElementById("confirm").innerHTML=`<div class="panel"><p>Semua obat dan riwayat akan dihapus dari HP ini.</p><div class="row"><button class="btn small" id="yesreset" style="background:var(--red)">Ya, kosongkan</button><button class="btn small ghost" id="noreset">Batal</button></div></div>`;return}
+  if(t.id==="yesreset"){S={nama:"",alarm:true,cekJam:"07:00",jam:{},meds:[],taken:{},checks:{}};save();render();return}
+  if(t.id==="noreset"){document.getElementById("confirm").innerHTML="";return}
+});
+document.getElementById("view").addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.jam&&el.value){S.jam[el.dataset.jam]=el.value;save();renderAlerts()}
+  if(el.id==="j-cek"&&el.value){S.cekJam=el.value;save();renderAlerts()}
+});
+document.getElementById("view").addEventListener("input",e=>{if(e.target.id==="nama"){S.nama=e.target.value;save();document.getElementById("greet").textContent=S.nama?`Halo, ${S.nama}`:"Pendamping harian pasien jantung hipertensi"}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!document.getElementById("overlay").hidden)closeOverlay()});
+render();setInterval(tick,15000);
+if(NATIVE){unlockAudio();syncNative()}
+</script>
+</body>
+</html>
